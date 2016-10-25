@@ -1,4 +1,4 @@
-   MODULE WANG   
+   MODULE TESTER 
    implicit none
    integer, parameter:: in=5,im=2 !! 'in' is the number of species in each patch, 'im' is the number of patches in the metacommunity
    integer, parameter:: imn=in*(im+1), npar=imn*(in+3)
@@ -66,13 +66,13 @@
       RETURN
       END SUBROUTINE DERIVS
 
-    END MODULE WANG
+    END MODULE TESTER
 
 !******************************************************************
 
     PROGRAM DEMOWANG
 
-      USE WANG
+      USE TESTER
       USE random
 !     Type declarations:
       IMPLICIT NONE
@@ -194,7 +194,7 @@ do i=1,npar; print*,par(i); enddo
          pos1=(i-1)*in+1; pos2=i*in
          noi_spec(pos1:pos2)=xep(i,:)
         enddo
-        noi_spec=abs(noi_spec); xptch=abs(xptch)   !!! DO WE NEED THIS STEP?
+!!        noi_spec=abs(noi_spec); xptch=abs(xptch)   !!! DO WE NEED THIS STEP?
         
         call DERIVS(NEQ,T,Y,YDER)
         
