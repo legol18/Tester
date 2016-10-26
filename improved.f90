@@ -1,6 +1,6 @@
-MODULE test   
+MODULE eco   
    implicit none
-   integer, parameter:: in=10,im=2,igen=5 !! n is the number of species in each patch, m is the number of patches in the metacommunity, igen: no. of generalists
+   integer, parameter:: in=10,im=2,igen=5 !! n is the number of species in each patch, m is the number of patches in the metacommunity
    integer, parameter:: imn=im*in, npar=imn*(imn+3)
    real(kind=4):: par(npar)
 
@@ -60,13 +60,13 @@ MODULE test
       RETURN
       END SUBROUTINE DERIVS
 
-    END MODULE test
+    END MODULE eco
 !******************************************************************
 
     PROGRAM improve
 
-      USE test
-      USE random  !! random module developed by Alan Miller (miller @ bigpond.net.au): attached along as random.f90
+      USE eco
+      USE random
 !     Type declarations:
       IMPLICIT NONE
       INTEGER, PARAMETER :: mlyap=0, NEQ=(mlyap+1)*imn
@@ -177,10 +177,14 @@ kppa=8.0
          call DERIVS(NEQ,T,Y,YDER)
           Y=Y+h*YDER; T=T+h
        ENDDO
-     !  do i=1,imn; print*, Y(i); enddo
+       
        Y=Y+0.1
       first = .true.
+      
       DO IOUT = 1, niter
+
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!! EVOLUTION BEGINS      
+      
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!! between species random number patch
           CALL random_mvnorm(kep, xmeanep, covep, chol_fep, first, xep, ier)
            IF (ier .NE. 0) THEN
@@ -208,32 +212,29 @@ kppa=8.0
           enddo
          enddo
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!         
-        
+
         call DERIVS(NEQ,T,Y,YDER)
-        Y=Y+h*YDER+sqrt(h)*(noi_spec+noi_ptch)+kppa*h*noi_ptch*noi_spec !!  noise added
-         do i=1,imn    !!!!! to discuss
-          if (Y(i)<0.0) Y(i)=0.001
-         enddo
-!!!! local simpson indices         
-         do i=1,im
-         spsum=0.0
-          for j=1,in
-           spsum=spsum+(Y((i-1)*i+j)/sum(Y((i-1)*im+1:(i-1)*im+in)))**2
-          enddo
-          loc_simp(i)=1.0/spsum
-         enddo 
-!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-        alpd=0.0
-        do i=1,im
-         alpd=alpd+sum(Y((i-1)*im+1:(i-1)*im+in))*loc_simp(i)
-        enddo 
+        Y=Y+h*YDER+sqrt(h)*Y*(noi_spec+noi_ptch+kppa*sqrt(h)*noi_ptch*noi_spec) !!  noise added
+        
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!! EVOLUTION DONE        
+! !!!! local simpson indices         
+!          do i=1,im
+!          spsum=0.0
+!           for j=1,in
+!            spsum=spsum+(Y((i-1)*i+j)/sum(Y((i-1)*im+1:(i-1)*im+in)))**2
+!           enddo
+!           loc_simp(i)=1.0/spsum
+!          enddo 
+! !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+!         alpd=0.0
+!         do i=1,im
+!          alpd=alpd+sum(Y((i-1)*im+1:(i-1)*im+in))*loc_simp(i)
+!         enddo 
          T=T+h
-!         write(11,24) T,Y(1:5)
-!         !write(12,24) T, noi_spec,xptch
-!         write(12,24) T,Y(6:10)
-!         write(20,24) T,(Y(6:10)+Y(16:20))/2
-!         write(13,24) T,Y(11:15)
-!         write(14,24) T,Y(16:20)
+        write(11,24) T,Y(1:5)
+        write(12,24) T,Y(6:10)
+        write(13,24) T,Y(11:15)
+        write(14,24) T,Y(16:20)
 
         first = .false.
       END DO ! IOUT
