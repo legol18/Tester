@@ -1,6 +1,6 @@
 MODULE test   
    implicit none
-   integer, parameter:: in=10,im=2,igen=5 !! n is the number of species in each patch, m is the number of patches in the metacommunity
+   integer, parameter:: in=10,im=2,igen=5 !! n is the number of species in each patch, m is the number of patches in the metacommunity, igen: no. of generalists
    integer, parameter:: imn=im*in, npar=imn*(imn+3)
    real(kind=4):: par(npar)
 
