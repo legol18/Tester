@@ -1,4 +1,4 @@
-MODULE eco   
+MODULE ECO   
    implicit none
    integer, parameter:: in=10,im=2,igen=5 !! n is the number of species in each patch, m is the number of patches in the metacommunity
    integer, parameter:: imn=im*in, npar=imn*(imn+3)
@@ -60,21 +60,21 @@ MODULE eco
       RETURN
       END SUBROUTINE DERIVS
 
-    END MODULE eco
+    END MODULE ECO
 !******************************************************************
 
-    PROGRAM improve
+    PROGRAM IMPROVE
 
-      USE eco
+      USE ECO
       USE random
 !     Type declarations:
       IMPLICIT NONE
       INTEGER, PARAMETER :: mlyap=0, NEQ=(mlyap+1)*imn
       real  :: h, T, TOUT, xrho1, xrho2, xvar1, xvar2, kppa
-      real  :: spsum, alpd
-      integer:: IOUT, i, j, ntrans, niter,kc
-      real,allocatable:: Y(:),Yold(:), YDER(:), noi_spec(:),noi_ptch(:)
-      real,allocatable:: loc_simp(:)
+      real  :: spsum, ald, btd, gmd
+      integer:: IOUT, i, j, ntrans, niter, kc
+      real,allocatable:: Y(:), Yold(:), YDER(:), noi_spec(:), noi_ptch(:), Yrelptch(:)
+      real,allocatable:: lo_simp(:),omg(:)
       
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!! variables for the random number generator
       INTEGER, ALLOCATABLE  :: ix(:), seed(:) 
@@ -92,15 +92,15 @@ MODULE eco
 CALL RANDOM_SEED(size=k)
 ALLOCATE (seed(k),xseed(k))
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!! FIXING THE SEED
-do i=1,k; call cpu_time(xtseed); xseed(i)=xtseed; enddo
-!call random_number(xseed)
+!do i=1,k; call cpu_time(xtseed); xseed(i)=xtseed; enddo
+call random_number(xseed)
 seed=int(5000000*xseed)
 CALL RANDOM_SEED(put=seed)
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
-xrho2=0.4  !!print*, "Between patch correlation"; 
-xrho1=-0.05 !!print*, "Between species correlation"; 
+xrho2=-0.8  !!print*, "Between patch correlation"; 
+xrho1=0.0 !!print*, "Between species correlation"; 
 xvar1=0.04  !! species specific variance
 xvar2=0.04  !! patch specific variance
 kppa=8.0
@@ -135,23 +135,29 @@ kppa=8.0
       END DO
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
-  ntrans=40000; niter=10000; allocate(Y(NEQ),YDER(NEQ),noi_spec(imn),noi_ptch(imn),loc_simp(im)); par=0.0; noi_spec=0.0; noi_ptch=0.0
+  ntrans=40000; niter=10000
+  allocate(Y(NEQ),YDER(NEQ),noi_spec(imn),noi_ptch(imn),lo_simp(im),omg(im),Yrelptch(NEQ)); 
+  par=0.0; noi_spec=0.0; noi_ptch=0.0
 
 !     Set  the problem parameters:
       call random_number(par(1:imn)); 
       par(1:imn)=0.5+par(1:imn)*1.0                 !! M*N MAXIMAL GROWTH RATES
-!      do i=1,(im-1)
-!        pos1=i*in-igen+1; pos2=(i+1)*in-igen+1    KEEP FOR NOW
-!        par(pos1:i*in)=par(pos2:(i+1)*in)
-!      enddo                                    !!!!!!!!!!!!!!!!!!
-      !!!!!!!!!!!!!!!!!!!!!!!!!
+!       do i=1,(im-1)
+!         pos1=i*in-igen+1; pos2=(i+1)*in-igen+1
+!         par(pos1:i*in)=par(pos2:(i+1)*in)
+!       enddo                                    !!!!!!!!!!!!!!!!!!
+!       !!!!!!!!!!!!!!!!!!!!!!!!!
       
       call random_number(par(imn+1:2*imn))
       par(imn+1:2*imn)=0.5+par(imn+1:2*imn)*1.0  !! M*N CARRYING CAPACITIES
+!       do i=1,(im-1)
+!         pos1=(imn+1)+i*in-igen; pos2=(imn+1)+(i+1)*in-igen
+!         par(pos1:imn+i*in)=par(pos2:imn+(i+1)*in)
+!       enddo                                    !!!!!!!!!!!!!!!!!!
       !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
       
       call random_number(par(2*imn+1:2*imn+imn**2)); 
-      par(2*imn+1:2*imn+imn**2)=0.25+par(2*imn+1:2*imn+imn**2)*0.5 !! M*N*N COMPETITION COEFFICIENTS FOR M PATCHES
+      par(2*imn+1:2*imn+imn**2)=0.25+par(2*imn+1:2*imn+imn**2)*0.5 !! M*N*N COMPETITION COEFFICIENTS FOR M PATCHES (NEED TO THINK ............!!!) **
       !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
       
       call random_number(par(2*imn+imn**2+1+in-igen:2*imn+imn**2+in)) !! DISPERSAL RATES
@@ -159,7 +165,7 @@ kppa=8.0
       do i=1,(im-1)
         pos1=(2*imn+imn**2+1)+i*in-igen; pos2=(2*imn+imn**2+1)+(i+1)*in-igen
         par(pos2:(2*imn+imn**2)+(i+1)*in)=par(pos1:(2*imn+imn**2)+i*in)
-      enddo
+      enddo !; print*,par(2*imn+imn**2+1:2*imn+imn**2+imn)      ; pause
       !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 !     Set the initial conditions:
       call random_number(Y); YDER=0.0
@@ -168,27 +174,26 @@ kppa=8.0
       h=0.1
       
 !     Perform the integration:
-!!! REMOVE THE TRANSIENTS
        DO IOUT = 1, ntrans
 !        print*,Y; pause
          call DERIVS(NEQ,T,Y,YDER)
           Y=Y+h*YDER; T=T+h
-       ENDDO       
-       Y=Y+0.1      !!! ADD IN CASE CERTAIN POPULATIONS VANISH
+       ENDDO
+       
+       Y=Y+0.1
       first = .true.
       
       DO IOUT = 1, niter
 
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!! EVOLUTION BEGINS      
       
-!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!! between species random number
-          CALL random_mvnorm(kep, xmeanep, covep, chol_fep, first, xep, ier)
-           IF (ier .NE. 0) THEN
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!! between species random number patch
+        CALL random_mvnorm(kep, xmeanep, covep, chol_fep, first, xep, ier)
+        IF (ier .NE. 0) THEN
             WRITE(*, *) '** Covariance matrix1 is not +ve definite **'
             PAUSE; !EXIT replaced since the do loop was removed
            END IF
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!! between patch random number
-       ! print*, xmeanptch; pause; print*,covptch; pause; print*,chol_fptch; pause
         CALL random_mvnorm(kptch, xmeanptch, covptch, chol_fptch, first, xptch, ier)
         IF (ier .NE. 0) THEN
           WRITE(*, *) '** Covariance matrix2 is not +ve definite **'
@@ -196,7 +201,7 @@ kppa=8.0
         END IF
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
-         do i=1,imn-igen; noi_spec(i)=xep(i); enddo;         !!!!!!!!!!!!!noise arrangement for evolution
+         do i=1,imn-igen; noi_spec(i)=xep(i); enddo;         !!!!!!!!!!!!!noise arrangement for integration
          do i=1,(im-1)  !! making up the dummy noise terms
            noi_spec((i*in+1)+(in-igen):(i*in+1)+in)=noi_spec(((i-1)*in+1)+(in-igen):((i-1)*in+1)+in)
          enddo
@@ -210,27 +215,47 @@ kppa=8.0
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!         
 
         call DERIVS(NEQ,T,Y,YDER)
-        Y=Y+h*YDER+sqrt(h)*Y*(noi_spec+noi_ptch+kppa*sqrt(h)*noi_ptch*noi_spec) !!  noise added
+        Y=Y+h*YDER+sqrt(h)*Y*(noi_spec+noi_ptch+kppa*noi_ptch*noi_spec) !!  noise added
+        do i=1,imn
+         if (Y(i)<1E-10) Y(i)=0.0
+        enddo 
         
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!! EVOLUTION DONE        
-! !!!! local simpson indices         
-!          do i=1,im
-!          spsum=0.0
-!           for j=1,in
-!            spsum=spsum+(Y((i-1)*i+j)/sum(Y((i-1)*im+1:(i-1)*im+in)))**2
-!           enddo
-!           loc_simp(i)=1.0/spsum
-!          enddo 
-! !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-!         alpd=0.0
-!         do i=1,im
-!          alpd=alpd+sum(Y((i-1)*im+1:(i-1)*im+in))*loc_simp(i)
-!         enddo 
+!!!! local simpson indices
+         do i=1,im
+           do j=1,in
+           Yrelptch((i-1)*i+j)=Y((i-1)*i+j)/sum(Y((i-1)*im+1:(i-1)*im+in))
+           enddo
+         enddo
+
+         do i=1,im
+         spsum=0.0
+          do j=1,in
+           spsum=spsum+Yrelptch((i-1)*i+j)**2
+          enddo
+          lo_simp(i)=spsum
+         enddo 
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+         do i=1,im                                    !!!! weight of each patch
+          omg(i)=sum(Y((i-1)*im+1:(i-1)*im+in))/sum(Y)
+         enddo 
+         ald=0.0
+         do i=1,im
+          ald=ald+omg(i)*lo_simp(i)
+         enddo
+         ald=1.0/ald   !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!! alpha_D
+!!!! global simpson index
+         spsum=0.0
+         do i=1,im
+           do j=1,in
+              spsum=spsum+(Yrelptch((i-1)*i+j)*omg(i))**2            
+           enddo
+         enddo 
+        gmd=1.0/spsum
+        btd=gmd/ald
+         
          T=T+h
-        write(11,24) T,Y(1:5)
-        write(12,24) T,Y(6:10)
-        write(13,24) T,Y(11:15)
-        write(14,24) T,Y(16:20)
+         write(11,24) T, ald, gmd, btd  !! alpha_d, beta_d, gamma_d - more to come
 
         first = .false.
       END DO ! IOUT
@@ -238,4 +263,4 @@ kppa=8.0
 !!! OUTPUT FILE FORMAT
       24  Format(40F20.10)
 
-END PROGRAM improve
+END PROGRAM IMPROVE
