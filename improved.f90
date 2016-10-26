@@ -60,13 +60,13 @@ MODULE test
       RETURN
       END SUBROUTINE DERIVS
 
-    END MODULE WANG
+    END MODULE test
 !******************************************************************
 
     PROGRAM improve
 
       USE test
-      USE random
+      USE random  !! random module developed by Alan Miller (miller @ bigpond.net.au): attached along as random.f90
 !     Type declarations:
       IMPLICIT NONE
       INTEGER, PARAMETER :: mlyap=0, NEQ=(mlyap+1)*imn
