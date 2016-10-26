@@ -1,8 +1,8 @@
    MODULE TESTER 
    implicit none
    integer, parameter:: in=5,im=2 !! 'in' is the number of species in each patch, 'im' is the number of patches in the metacommunity
-   integer, parameter:: imn=in*(im+1), npar=imn*(in+3)
-   real(kind=4):: par(npar)
+   integer, parameter:: imn=in*(im+1), npar=imn*(in+3) !! 'imn' - state space dimension, 'npar' - total parameters 
+   real(kind=4):: par(npar)  
 
     CONTAINS
 
