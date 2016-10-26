@@ -140,22 +140,18 @@ kppa=8.0
 !     Set  the problem parameters:
       call random_number(par(1:imn)); 
       par(1:imn)=0.5+par(1:imn)*1.0                 !! M*N MAXIMAL GROWTH RATES
-      do i=1,(im-1)
-        pos1=i*in-igen+1; pos2=(i+1)*in-igen+1
-        par(pos1:i*in)=par(pos2:(i+1)*in)
-      enddo                                    !!!!!!!!!!!!!!!!!!
+!      do i=1,(im-1)
+!        pos1=i*in-igen+1; pos2=(i+1)*in-igen+1    KEEP FOR NOW
+!        par(pos1:i*in)=par(pos2:(i+1)*in)
+!      enddo                                    !!!!!!!!!!!!!!!!!!
       !!!!!!!!!!!!!!!!!!!!!!!!!
       
       call random_number(par(imn+1:2*imn))
       par(imn+1:2*imn)=0.5+par(imn+1:2*imn)*1.0  !! M*N CARRYING CAPACITIES
-!       do i=1,(im-1)
-!         pos1=(imn+1)+i*in-igen; pos2=(imn+1)+(i+1)*in-igen
-!         par(pos1:imn+i*in)=par(pos2:imn+(i+1)*in)
-!       enddo                                    !!!!!!!!!!!!!!!!!!
       !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
       
       call random_number(par(2*imn+1:2*imn+imn**2)); 
-      par(2*imn+1:2*imn+imn**2)=0.25+par(2*imn+1:2*imn+imn**2)*0.5 !! M*N*N COMPETITION COEFFICIENTS FOR M PATCHES (NEED TO THINK ............!!!) **
+      par(2*imn+1:2*imn+imn**2)=0.25+par(2*imn+1:2*imn+imn**2)*0.5 !! M*N*N COMPETITION COEFFICIENTS FOR M PATCHES
       !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
       
       call random_number(par(2*imn+imn**2+1+in-igen:2*imn+imn**2+in)) !! DISPERSAL RATES
@@ -163,7 +159,7 @@ kppa=8.0
       do i=1,(im-1)
         pos1=(2*imn+imn**2+1)+i*in-igen; pos2=(2*imn+imn**2+1)+(i+1)*in-igen
         par(pos2:(2*imn+imn**2)+(i+1)*in)=par(pos1:(2*imn+imn**2)+i*in)
-      enddo !; print*,par(2*imn+imn**2+1:2*imn+imn**2+imn)      ; pause
+      enddo
       !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 !     Set the initial conditions:
       call random_number(Y); YDER=0.0
@@ -172,20 +168,20 @@ kppa=8.0
       h=0.1
       
 !     Perform the integration:
+!!! REMOVE THE TRANSIENTS
        DO IOUT = 1, ntrans
 !        print*,Y; pause
          call DERIVS(NEQ,T,Y,YDER)
           Y=Y+h*YDER; T=T+h
-       ENDDO
-       
-       Y=Y+0.1
+       ENDDO       
+       Y=Y+0.1      !!! ADD IN CASE CERTAIN POPULATIONS VANISH
       first = .true.
       
       DO IOUT = 1, niter
 
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!! EVOLUTION BEGINS      
       
-!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!! between species random number patch
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!! between species random number
           CALL random_mvnorm(kep, xmeanep, covep, chol_fep, first, xep, ier)
            IF (ier .NE. 0) THEN
             WRITE(*, *) '** Covariance matrix1 is not +ve definite **'
@@ -200,7 +196,7 @@ kppa=8.0
         END IF
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
-         do i=1,imn-igen; noi_spec(i)=xep(i); enddo;         !!!!!!!!!!!!!noise arrangement for integration
+         do i=1,imn-igen; noi_spec(i)=xep(i); enddo;         !!!!!!!!!!!!!noise arrangement for evolution
          do i=1,(im-1)  !! making up the dummy noise terms
            noi_spec((i*in+1)+(in-igen):(i*in+1)+in)=noi_spec(((i-1)*in+1)+(in-igen):((i-1)*in+1)+in)
          enddo
