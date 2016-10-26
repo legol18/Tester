@@ -211,7 +211,7 @@ kppa=8.0
         
         call DERIVS(NEQ,T,Y,YDER)
         Y=Y+h*YDER+sqrt(h)*(noi_spec+noi_ptch)+kppa*h*noi_ptch*noi_spec !!  noise added
-         do i=1,imn
+         do i=1,imn    !!!!! to discuss
           if (Y(i)<0.0) Y(i)=0.001
          enddo
 !!!! local simpson indices         
