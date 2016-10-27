@@ -1,4 +1,4 @@
-MODULE ECO   
+MODULE WANG   
    implicit none
    integer, parameter:: in=10,im=2,igen=5 !! n is the number of species in each patch, m is the number of patches in the metacommunity
    integer, parameter:: imn=im*in, npar=imn*(imn+3)
@@ -60,12 +60,12 @@ MODULE ECO
       RETURN
       END SUBROUTINE DERIVS
 
-    END MODULE ECO
+    END MODULE WANG
 !******************************************************************
 
-    PROGRAM IMPROVE
+    PROGRAM DEMOWANG
 
-      USE ECO
+      USE WANG
       USE random
 !     Type declarations:
       IMPLICIT NONE
@@ -92,8 +92,8 @@ MODULE ECO
 CALL RANDOM_SEED(size=k)
 ALLOCATE (seed(k),xseed(k))
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!! FIXING THE SEED
-!do i=1,k; call cpu_time(xtseed); xseed(i)=xtseed; enddo
-call random_number(xseed)
+do i=1,k; call cpu_time(xtseed); xseed(i)=xtseed; enddo
+!call random_number(xseed)
 seed=int(5000000*xseed)
 CALL RANDOM_SEED(put=seed)
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
@@ -223,22 +223,24 @@ kppa=8.0
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!! EVOLUTION DONE        
 !!!! local simpson indices
          do i=1,im
-           do j=1,in
-           Yrelptch((i-1)*i+j)=Y((i-1)*i+j)/sum(Y((i-1)*im+1:(i-1)*im+in))
+           do j=1,in; !print*,(i-1)*in+j, (i-1)*in+1,i*in                  QC done
+           Yrelptch((i-1)*in+j)=Y((i-1)*in+j)/sum(Y((i-1)*in+1:i*in))
            enddo
+           !pause                                                          QC done 
          enddo
 
          do i=1,im
          spsum=0.0
-          do j=1,in
-           spsum=spsum+Yrelptch((i-1)*i+j)**2
-          enddo
+          do j=1,in; !print*,(i-1)*in+j                                    QC done
+           spsum=spsum+Yrelptch((i-1)*in+j)**2
+          enddo; !pause                                                    QC done
           lo_simp(i)=spsum
          enddo 
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
          do i=1,im                                    !!!! weight of each patch
-          omg(i)=sum(Y((i-1)*im+1:(i-1)*im+in))/sum(Y)
-         enddo 
+         !print*,(i-1)*in+1,i*in                                           QC done
+          omg(i)=sum(Y((i-1)*in+1:i*in))/sum(Y)
+         enddo; !pause                                                     QC done 
          ald=0.0
          do i=1,im
           ald=ald+omg(i)*lo_simp(i)
@@ -247,15 +249,15 @@ kppa=8.0
 !!!! global simpson index
          spsum=0.0
          do i=1,im
-           do j=1,in
-              spsum=spsum+(Yrelptch((i-1)*i+j)*omg(i))**2            
-           enddo
+           do j=1,in; !print*,i, j, (i-1)*in+j                             QC done
+              spsum=spsum+(Yrelptch((i-1)*in+j)*omg(i))**2            
+           enddo; pause
          enddo 
         gmd=1.0/spsum
         btd=gmd/ald
          
          T=T+h
-         write(11,24) T, ald, gmd, btd  !! alpha_d, beta_d, gamma_d - more to come
+         write(11,24) T, ald, gmd, btd
 
         first = .false.
       END DO ! IOUT
@@ -263,4 +265,4 @@ kppa=8.0
 !!! OUTPUT FILE FORMAT
       24  Format(40F20.10)
 
-END PROGRAM IMPROVE
+END PROGRAM DEMOWANG
