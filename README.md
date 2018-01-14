@@ -1,5 +1,5 @@
 # Tester
-Robust simulation platform for ecological modeling of metacommunity dynamics.
+Simulation project for modeling metacommunity dynamics.
 
 Currently working on the comparison of different time factors accompanying the between species, between patch and the combined response random numbers. To be updated ...
 
