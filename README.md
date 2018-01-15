@@ -17,4 +17,6 @@ Steps to simulation:
 
 1) Start with *deterministic.f90*. It generates system trajectories using *dvode_f90_m.f90*. It will give you a flavour of the species evolution.
 
-2) Repeat the calculation with *det_euler.f90*. Note the difference in results. Why? is the system neutrally stable? Can be checked via Lyapunov exponent calculations - to do.
+2) Repeat the calculation with *det_euler.f90*. Compare the results as they should be identical.
+
+3) ...
