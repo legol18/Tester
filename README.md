@@ -17,6 +17,6 @@ Steps to simulation:
 
 1) Start with *deterministic.f90*. It generates system trajectories using *dvode_f90_m.f90*. It will give you a flavour of the species evolution.
 
-2) Repeat the calculation with *det_euler.f90*. Compare the results as they should be identical. Increase the evolution time and decrease the time step *h* is the results do not match in the begining.
+2) Repeat the calculation with *det_euler.f90*. Compare the results as they should be identical. Increase the evolution time and decrease the time step *h* is the results do not match in the begining. If issues persist, please report, Thanks.
 
 3) ...
