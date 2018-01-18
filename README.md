@@ -1,7 +1,5 @@
 # Tester
-Simulation project for modeling metacommunity dynamics.
-
-Currently working on the comparison of different time factors accompanying the between species, between patch and the combined response random numbers. To be updated ...
+Simulation project for modeling metacommunity dynamics. Project is based on *Wang and Loreau* paper on "Biodiversity and ecosystem stability across scales in metacommunities" in *Ecology letters, Volume 19, Issue 5, May 2016, Pages 510–518*.
 
 To check the preliminary results, please compile the linked executable:
 
