@@ -5,11 +5,11 @@ This compilaton/execution steps below are for Linux systems. For compiling and r
 
 To check the preliminary results, please compile the linked executable:
 
-*gfortran dvode_f90_m.f90 deterministic.f90 -o xx* (for deterministic trajectory calculations without Euler)
+(a) *gfortran dvode_f90_m.f90 deterministic.f90 -o xx* (for deterministic trajectory calculations without Euler)
 
-*gfortran det_euler.f90 -o xx* (for deterministic trajectory calculations with Euler)
+(b) *gfortran det_euler.f90 -o xx* (for deterministic trajectory calculations with Euler)
 
-*gfortran random.f90 xxxx.f90 -o xx* (for stochastic calculations - using Euler)
+(c) *gfortran random.f90 xxxx.f90 -o xx* (for stochastic calculations - using Euler)
 
 (please replace *gfortran* with your usual compiler id, *xxxx* by the file you would like to compile and let *xx* be the executable name. Execution can be achieved by usual *./xx* command on the terminal.)
 
@@ -19,4 +19,4 @@ Steps to simulation:
 
 2) Repeat the calculation with *det_euler.f90*. The output is in files *fort.11* and *fort.12*. Compare the results as they should be identical. Increase the evolution time and decrease the time step *h* if the results do not match. If issues still persist then please report, Thanks.
 
-3) ...
+3) Now after checking the calculations for the deterministic cases, compile the file *stoch_trajectory.f90* as per procedure (c) mentioned above and execute. The program will ask for an input which corresponds to the "between patch correlation* value. Based on the paper, pick a value in *(-0.8,0.8)* and check the out trajectories stored in files *fort.11* and *fort.12*. Please note that the program will also print two rows as screen outputs. Here the first row corresponds to the state of the system (equilibrium in this system's case) after removing the transients and the second row corresponds to one possible state of the system after noisy evolution. I placed these just to check the final states of the system to see if the program exhibits numerical issues during the evolution. Lines corresponding to these outputs can be removed. 
