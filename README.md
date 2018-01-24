@@ -1,4 +1,6 @@
 # Tester
+(same as the wiki)
+
 Simulation project for modeling metacommunity dynamics based on *Wang and Loreau* paper on "Biodiversity and ecosystem stability across scales in metacommunities" in *Ecology letters, Volume 19, Issue 5, May 2016, Pages 510–518*.
 
 This compilaton/execution steps below are for Linux systems. For compiling and running these codes on Windows, please follow your Windows FORTRAN compiler procedure.
