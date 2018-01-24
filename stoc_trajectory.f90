@@ -7,7 +7,7 @@ MODULE WANG
 
     CONTAINS
 
-      SUBROUTINE DERIVS(NEQ,T,Y,YDOT)
+      SUBROUTINE DERIVS(NEQ,T,Y,YDOT) !!!! CONTAINS THE SYSTEM ODEs
         IMPLICIT NONE
         INTEGER, intent(in):: NEQ
         real(kind=8), intent(in):: T, Y(NEQ) 
@@ -51,7 +51,6 @@ MODULE WANG
           ! if(itj/=icptch) print*,iti,icptch,iflag+(itj-1)*in; pause
            enddo
             YDOT(iti)=ar(iti)*Y(iti)*(1.0-(Y(iti)+cptsum)/akc(iti))+(-ad(iti)*Y(iti)+cdsum/float(im-1))
-            
        enddo
       RETURN
       END SUBROUTINE DERIVS
@@ -60,8 +59,7 @@ MODULE WANG
 
 !******************************************************************
 
-    PROGRAM DEMOWANG
-
+    PROGRAM DEMOWANG   !!! LINK TO RANDOM.F90 WHILE COMPILATION
       USE WANG
       USE random
 !     Type declarations:
@@ -89,7 +87,7 @@ MODULE WANG
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!! FIXING THE SEED
 !do i=1,k; call cpu_time(xtseed); xseed(i)=xtseed; enddo
  call random_number(xseed)
- seed=int(50000*xseed)
+ seed=int(50000*xseed)  !!! CRAPPY WAY OF FIXING THE SEED
  CALL RANDOM_SEED(put=seed)
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 ! 
@@ -202,7 +200,7 @@ kppa=8.0    !! kappa
         enddo
 
          call DERIVS(NEQ,T,Y,YDER)
-         Y=Y+h*YDER+sqrt(h)*Y*(noi_spec+noi_ptch+kppa*noi_ptch*noi_spec) !!  noise added; T=T+h
+         Y=Y+h*YDER+sqrt(h)*Y*(noi_spec+noi_ptch+kppa*noi_ptch*noi_spec) !!  NOISE ADDED AS IN THE PAPER
          write(11,24) T,Y(1:10)
          write(12,24) T,Y(11:20)
          T=T+h
