@@ -9,7 +9,7 @@
     CONTAINS
 
       SUBROUTINE DERIVS(NEQ,T,Y,YDOT)
-        IMPLICIT NONE
+        IMPLICIT NONE          
         INTEGER, intent(in):: NEQ
         real(kind=4), intent(in):: T, Y(NEQ) 
         real(kind=4), intent(out):: YDOT(NEQ)
@@ -42,8 +42,8 @@
               enddo 
         !*************************
         do iti=1,imn
-        
-           cptsum=0.0                                                   !!
+                  
+           cptsum=0.0                                                   !!          
            do itj=1,imn                                                 !! competition summation
             cptsum=cptsum+acpt(iti,itj)*Y(itj)                          !!
            enddo                                                        !!   
@@ -74,18 +74,6 @@
       USE random
 !     Type declarations:
       IMPLICIT NONE
-      
-!!! REGRESSION ROUTINE
-      EXTERNAL func
-        
-        INTERFACE
-            REAL FUNCTION pxpand (order, xv, coeff)
-                IMPLICIT NONE
-                INTEGER,INTENT(IN)           :: order
-                REAL,DIMENSION(1),INTENT(IN) :: coeff   ! was dim(order)
-                REAL,INTENT(IN)              :: xv
-            END FUNCTION pxpand
-        END INTERFACE
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
       real(kind=4):: h,T,TOUT, xrho1, xrho2, xvar1, xvar2, kppa
       real(kind=4):: ald,aldi,gmd,gmdi,btd, reg_avg
@@ -113,21 +101,10 @@
     LOGICAL               :: first
 
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!! FOR REGRESSION
-         REAL, DIMENSION(20)     :: aR, wR
-         REAL, DIMENSION(200,20) :: uR
-         REAL, DIMENSION(20,20)  :: vR
-         INTEGER                 :: jR
-         REAL                    :: xxR, yyR, slopeaa,slopeab,slopebb,slopegg 
-         INTEGER                 :: n1R, n2R, norderR
-!         
-!         !   raw data to be fit
-         INTEGER, PARAMETER      :: nvalsR  = ninic
-         REAL, DIMENSION(nvalsR)  :: xR !     = (/ 1.0, 2.0, 3.0, 4.0, 5.0 /)
-         REAL, DIMENSION(nvalsR)  :: yR !     = (/ 1.0, 16.0, 80.9, 256.5, 625.0 /)
-         real, dimension(nvalsR) :: aldR, btdR, gmdR, alcvR, btcvR, gmcvR
-
-         norderR = 2; n1R=1; n2R=nvalsR     
+   real(kind=8) aR,bR,slopeaa,slopeab,slopebb,slopegg    !!!!!!!!!!!!!!!!!!!!! FOR REGRESSION
+   REAL, DIMENSION(ninic)  :: xR !     = (/ 1.0, 2.0, 3.0, 4.0, 5.0 /)
+   REAL, DIMENSION(ninic)  :: yR !     = (/ 1.0, 16.0, 80.9, 256.5, 625.0 /)
+   real, dimension(ninic) :: aldR, btdR, gmdR, alcvR, btcvR, gmcvR
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
    allocate(Y(NEQ),YDER(NEQ),ctmp(imn,imn),noi_spec(imn),noi_ptch(imn)); par=0.0
@@ -367,7 +344,7 @@ kppa=3.0    !! kappa
 !!!!!!!!!!!!!!!!!!!!!!!! ENS based
    do l=1,im
      sum_patch_l=sum(ysave(l,:,niter))
-    do i=1,in
+    do i=1,in          
      yprel(l,i)=ysave(l,i,niter)/sum_patch_l
     enddo
    enddo
@@ -425,471 +402,27 @@ kppa=3.0    !! kappa
    enddo !!!! INIC
    
    !!!!! Regression start
-   aR=0.d0; wR=0.d0; uR=0.d0; vR=0.d0;xr=0.d0; yR=0.d0
-
+   aR=0.d0; bR=0.d0
   xR=aldR; yR=alcvR
-  CALL svdfit (xR(n1R), yR(n1R), n2R-n1R+1, aR, norderR, uR, vR, wR, nvalsR+5, 20, func) !! fit alcv and ald
-  slopeaa=aR(2)
-  
+  call llsq ( ninic, xR, yR, aR, bR ) !! fit alcv and ald
+  slopeaa=aR
+  print*,aR,bR
   yR=btcvR
-  CALL svdfit (xR(n1R), yR(n1R), n2R-n1R+1, aR, norderR, uR, vR, wR, nvalsR+5, 20, func) !! fit btdcv and ald
-  slopeab=aR(2)
-
+  call llsq ( ninic, xR, yR, aR, bR ) !! fit btdcv and ald
+  slopeab=aR
+  print*,aR,bR
   xR=btdR; yR=btcvR
-  CALL svdfit (xR(n1R), yR(n1R), n2R-n1R+1, aR, norderR, uR, vR, wR, nvalsR+5, 20, func) !! fit btdcv and btd
-  slopebb=aR(2)
-  
+   call llsq ( ninic, xR, yR, aR, bR ) !! fit btdcv and btd
+  slopebb=aR
+  print*,aR,bR
   xR=gmdR; yR=gmcvR
-  CALL svdfit (xR(n1R), yR(n1R), n2R-n1R+1, aR, norderR, uR, vR, wR, nvalsR+5, 20, func) !! fit gmcvcv and gmdd
-  slopegg=aR(2)
-  
-  !!!!! Regression enddo
+   call llsq ( ninic, xR, yR, aR, bR ) !! fit gmcvcv and gmdd
+  slopegg=aR
+  print*,aR,bR
+  !!!!! Regression end
   write(21,24) xrho2,slopeaa,slopeab,slopebb,slopegg
 !! OUTPUT FILE FORMAT
     
       24  Format(20F20.7)
 
 END PROGRAM DEMOWANG
-
-
-!!! POLYFIT
-
-!     PROGRAM polyfit
-!         IMPLICIT NONE
-!         EXTERNAL func
-!         
-!         INTERFACE
-!             REAL FUNCTION pxpand (order, xv, coeff)
-!                 IMPLICIT NONE
-!                 INTEGER,INTENT(IN)           :: order
-!                 REAL,DIMENSION(1),INTENT(IN) :: coeff   ! was dim(order)
-!                 REAL,INTENT(IN)              :: xv
-!             END FUNCTION pxpand
-!         END INTERFACE
-!         
-!         REAL, DIMENSION(20)     :: a, w
-!         REAL, DIMENSION(200,20) :: u
-!         REAL, DIMENSION(20,20)  :: v
-!         INTEGER                 :: j
-!         REAL                    :: xx, yy 
-!         INTEGER                 :: n1, n2, norder
-!         
-!         !   raw data to be fit
-!         INTEGER, PARAMETER      :: nvals  = 5
-!         REAL, DIMENSION(nvals)  :: x      = (/ 1.0, 2.0, 3.0, 4.0, 5.0 /)1
-!         REAL, DIMENSION(nvals)  :: y      = (/ 1.0, 16.0, 80.9, 256.5, 625.0 /) 
-! 
-!         !   polynomial order for fitting
-!         norder = 4
-!  
-!         !   fit a polynomial of order norder to the 
-!         !   [n1,n2] subset of arrays x() and y();
-!         !   the array a() is returned with the best-fit coefficients:
-!         !   y(x) = a(1) + a(2)*x + a(3)*x**2 +...+ a(n)*x**(n-1)
-!         n1 = 1
-!         n2 = nvals
-!         CALL svdfit (x(n1), y(n1), n2-n1+1, a, norder,  &
-!                      u, v, w, nvals+5, 20, func)
-!         
-!         OPEN (3, FILE='c:\tcfit\ircon\polyfit\POLYFIT.DAT', STATUS = 'APPEND')
-!         WRITE (3,'(/5X,"Fit order is ",I2//)') norder
-!         
-!         DO j = 1, norder
-!             WRITE (3,*) j-1, a(j)
-!         END DO
-! 
-!         DO j = n1, n2
-!             xx = x(j)
-!             yy = pxpand (norder, xx, a)
-!             WRITE (3,*) xx, y(j), yy, yy-y(j)
-!         END DO
-!         
-!         CLOSE (3)
-! 
-!     END PROGRAM polyfit
-! 
-
-    SUBROUTINE svdfit (x, y, ndata, a, ma, u, v, w, mp, np, funcs)
-        IMPLICIT NONE
-        INTEGER, INTENT(IN)                  :: ndata, ma, mp, np
-       
-        REAL, DIMENSION(ndata),  INTENT(IN)  :: x, y
-        REAL, DIMENSION(ma),     INTENT(OUT) :: a
-        REAL, DIMENSION(mp, np), INTENT(OUT) :: u
-        REAL, DIMENSION(np, np), INTENT(OUT) :: v
-        REAL, DIMENSION(np),     INTENT(OUT) :: w
-        EXTERNAL funcs
-        
-        INTEGER, PARAMETER                   :: nmax = 1000, mmax = 50
-        REAL, PARAMETER                      :: tol = 1.E-5
-        
-        REAL, DIMENSION(nmax)                :: b
-        REAL, DIMENSION(mmax)                :: afunc
-        INTEGER                              :: i, j
-        REAL                                 :: wmax, thresh
-        
-        DO i = 1, ndata
-            CALL funcs (x(i), afunc, ma)
-            DO j = 1, ma
-                u(i,j) = afunc(j)
-            END DO                                  ! 11
-            b(i) = y(i)
-        END DO                                      ! 12
-        
-        CALL svdcmp (u, ndata, ma, mp, np, w, v)
-        
-        wmax = 0.
-        DO j = 1, ma
-            IF (w(j) > wmax) wmax = w(j)
-        END DO
-        
-        thresh = tol*wmax
-        
-        DO j = 1, ma
-            IF (w(j) < thresh) w(j) = 0.
-        END DO
-        
-        CALL svbksb (u, w, v, ndata, ma, mp, np, b, a)
-        
-    END SUBROUTINE svdfit
-        
-
-    SUBROUTINE svdcmp (a, m, n, mp, np, w, v)
-        IMPLICIT NONE
-        INTEGER, PARAMETER                      :: nmax = 100
-        INTEGER, INTENT(IN)                     :: m, n, mp, np
-        REAL, DIMENSION(mp,np), INTENT(INOUT)   :: a
-        REAL, DIMENSION(np),    INTENT(INOUT)   :: w
-        REAL, DIMENSION(np,np), INTENT(INOUT)   :: v
-        REAL, DIMENSION(nmax)                   :: rv1
-        REAL                                    :: c, f, g, h, s, scale, anorm, x, y, z
-        INTEGER                                 :: i, j, k, l, nm, its
-        LOGICAL                                 :: block1
-        
-        g     = 0.
-        scale = 0.
-        anorm = 0.
-        
-        DO i = 1, n                 ! 25
-            l = i+1
-            rv1(i) = scale*g
-            g      = 0.
-            s      = 0.
-            scale  = 0.
-            IF (i <= m) THEN
-                DO k = i, m
-                    scale = scale + ABS(a(k,i))
-                END DO                                      ! 11
-                IF (scale /= 0.) THEN
-                    
-                    DO k = i, m
-                        a(k,i) = a(k,i)/scale
-                        s = s + a(k,i)*a(k,i)
-                    END DO                                  ! 12
-                    
-                    f      = a(i,i)
-                    g      = -SIGN(SQRT(s), f)
-                    h      = f*g - s
-                    a(i,i) = f - g
-                    
-                    IF (i /= n) THEN
-                        DO j = l, n         ! 15
-                            s = 0.
-                            DO k = i, m
-                                s = s + a(k,i)*a(k,j)
-                            END DO                          ! 13
-                            f = s/h
-                            DO k = i, m
-                                a(k,j) = a(k,j) + f*a(k,i)
-                            END DO                          ! 14
-                        END DO                              ! 15
-                    END IF
-                    
-                    DO k = i, m
-                        a(k,i) = scale*a(k,i)
-                    END DO                                  ! 16
-                END IF
-            END IF
-            
-            w(i)  = scale*g
-            g     = 0.
-            s     = 0.
-            scale = 0.
-            
-            IF (i <= m .AND. i /= n) THEN
-                DO k = l, n
-                    scale = scale + ABS(a(i,k))
-                END DO                                      ! 17
-                
-                IF (scale /= 0.) THEN
-                    DO k = l, n
-                        a(i,k) = a(i,k)/scale
-                        s = s + a(i,k)*a(i,k)
-                    END DO                                  ! 18
-                    
-                    f      = a(i,l)
-                    g      = -SIGN(SQRT(s), f)
-                    h      = f*g - s
-                    a(i,l) = f - g
-                    
-                    DO k = l, n
-                        rv1(k) = a(i,k)/h
-                    END DO                                  ! 19
-                    
-                    IF (i /= m) THEN
-                        DO j = l, m
-                            s = 0.
-                            DO k = l, n
-                                s = s + a(j,k)*a(i,k)
-                            END DO                          ! 21
-                            DO k = l, n
-                                a(j,k) = a(j,k) + s*rv1(k)
-                            END DO                          ! 22
-                        END DO                              ! 23
-                    END IF
-                    
-                    DO k = l, n
-                        a(i,k) = scale*a(i,k)
-                    END DO                                  ! 24
-                END IF
-            END IF
-            
-            anorm = AMAX1(anorm, (ABS(w(i)) + ABS(rv1(i)))) 
-        END DO                                              ! 25
-        
-        DO i = n, 1, -1             ! 32
-            IF (i < n) THEN
-                IF (g /= 0.) THEN
-                    DO j = l, n
-                        v(j,i) = (a(i,j)/a(i,l))/g
-                    END DO                                  ! 26
-                    DO j = l, n
-                        s = 0.
-                        DO k = l, n
-                            s = s + a(i,k)*v(k,j)
-                        END DO                              ! 27
-                        DO k = l, n
-                            v(k,j) = v(k,j) + s*v(k,i)
-                        END DO                              ! 28
-                    END DO                                  ! 29
-                END IF
-                
-                DO j = l, n
-                    v(i,j) = 0.
-                    v(j,i) = 0.
-                END DO                                      ! 31
-            END IF
-            
-            v(i,i) = 1.
-            g      = rv1(i)
-            l      = i
-        END DO                                              ! 32
-        
-        DO i = n, 1, -1
-            l = i + 1
-            g = w(i)
-            
-            IF (i < n) THEN
-                DO j = l, n
-                    a(i,j) = 0.
-                END DO                                      ! 33
-            END IF
-            
-            IF (g /= 0.) THEN
-                g = 1./g
-                IF (i /= n) THEN
-                    DO j = l, n
-                        s = 0.
-                        DO k = l, m
-                            s = s + a(k,i)*a(k,j)
-                        END DO                              ! 34
-                        f = (s/a(i,i))*g
-                        DO k = i, m
-                            a(k,j) = a(k,j) + f*a(k,i)
-                        END DO                              ! 35
-                    END DO                                  ! 36
-                END IF
-                
-                DO j = i, m
-                    a(j,i) = a(j,i)*g
-                END DO                                      ! 37
-            
-            ELSE
-                DO j = i, m
-                    a(j,i) = 0.
-                END DO                                      ! 38
-            END IF
-            
-            a(i,i) = a(i,i) + 1.
-        END DO                                              ! 39
-        
-        loop49: DO k = n, 1, -1     ! 49
-            DO its = 1, 30          ! 48
-                
-                block1 = .TRUE.
-                DO l = k, 1, -1
-                    nm = l - 1
-                    IF      ((ABS(rv1(l)) + anorm) == anorm) THEN
-                        block1 = .FALSE.
-                        EXIT
-                    ELSE IF ((ABS(w(nm)) + anorm)  == anorm) THEN
-                        EXIT
-                    END IF
-                END DO                                      ! 41
-                
-                IF (block1) THEN
-                    c = 0.                                  ! 1
-                    s = 1.
-                    DO i = l, k         ! 43
-                        f = s*rv1(i)
-                        IF ((ABS(f) + anorm) /= anorm) THEN
-                            g    = w(i)
-                            h    = SQRT(f*f + g*g)
-                            w(i) = h
-                            h    = 1./h
-                            c    = g*h
-                            s    = -(f*h)
-                            DO j = 1, m
-                                y       = a(j,nm)
-                                z       = a(j,i)
-                                a(j,nm) =   y*c  + z*s
-                                a(j,i)  = -(y*s) + z*c
-                            END DO                          ! 42
-                        END IF
-                    END DO                                  ! 43
-                END IF
-                
-                !   block 2
-                z = w(k)
-                IF (l == k) THEN
-                    IF (z < 0.) THEN
-                        w(k) = -z
-                        DO j = 1, n
-                            v(j,k) = - v(j,k)
-                        END DO                              ! 44
-                    END IF
-                    CYCLE loop49
-                END IF
-                
-                IF (its == 30) PAUSE 'No convergence in 30 iterations'
-                
-                x  = w(l)
-                nm = k - 1
-                y  = w(nm)
-                g  = rv1(nm)
-                h  = rv1(k)
-                f  = ((y-z)*(y+z) + (g-h)*(g+h)) / (2.*h*y)
-                g  = SQRT(f*f + 1.)
-                f  = ((x-z)*(x+z) + h*((y/(f + SIGN(g,f))) - h))/x
-                c  = 1.
-                s  = 1.
-
-                DO j = l, nm    ! 47
-                    i = j + 1
-                    g = rv1(i)
-                    y = w(i)
-                    h = s*g
-                    g = c*g
-                    z = SQRT(f*f + h*h)
-                    rv1(j) = z
-                    c = f/z
-                    s = h/z
-                    f =   x*c  + g*s
-                    g = -(x*s) + g*c
-                    h = y*s
-                    y = y*c
-                    DO nm = 1, n        ! 45
-                        x = v(nm,j)
-                        z = v(nm,i)
-                        v(nm,j) =   x*c  + z*s
-                        v(nm,i) = -(x*s) + z*c
-                    END DO                          ! 45
-                    z = SQRT(f*f + h*h)
-                    w(j) = z
-                    IF (z /= 0.) THEN
-                        z = 1./z
-                        c = f*z
-                        s = h*z
-                    END IF
-                    f =   c*g  + s*y
-                    x = -(s*g) + c*y
-                    DO nm = 1, m        ! 46
-                        y = a(nm,j)
-                        z = a(nm,i)
-                        a(nm,j) =   y*c  + z*s
-                        a(nm,i) = -(y*s) + z*c
-                    END DO                              ! 46
-                END DO                                  ! 47
-                
-                rv1(l) = 0.
-                rv1(k) = f
-                w(k)   = x
-            END DO                                      ! 48
-           
-        END DO loop49                                   ! 49
-    
-    END SUBROUTINE svdcmp
-
-
-    SUBROUTINE svbksb (u, w, v, m, n, mp, np, b, x)
-        IMPLICIT NONE
-        INTEGER,                INTENT(IN)   :: m, n, mp, np
-        REAL, DIMENSION(mp,np), INTENT(IN)   :: u
-        REAL, DIMENSION(np,np), INTENT(IN)   :: v
-        REAL, DIMENSION(np)   , INTENT(IN)   :: w
-        REAL, DIMENSION(np)   , INTENT(OUT)  :: x
-        REAL, DIMENSION(mp)   , INTENT(IN)   :: b
-        
-        INTEGER, PARAMETER                   :: nmax = 100
-        REAL, DIMENSION(nmax)                :: tmp
-        INTEGER                              :: i, j, jj
-        REAL                                 :: s
-        
-        DO j = 1, n
-            s = 0.
-            IF (w(j) /= 0.) THEN
-                DO i = 1, m
-                    s = s + u(i,j)*b(i)
-                END DO                          ! 11
-                s = s/w(j)
-            END IF
-            tmp(j) = s
-        END DO                                  ! 12
-            
-        DO j = 1, n
-            s = 0.
-            DO jj = 1, n
-                s = s + v(j,jj)*tmp(jj)
-            END DO                              ! 13
-            x(j) = s
-        END DO                                  ! 14
- 
-    END SUBROUTINE svbksb
-     
-     
-    SUBROUTINE func (x, afunc, ma)
-        IMPLICIT NONE
-        REAL, INTENT(IN)                    :: x
-        INTEGER, INTENT(IN)                 :: ma
-        REAL, DIMENSION(ma), INTENT(OUT)    :: afunc
-        INTEGER                             :: j
-        afunc(1) = 1.
-        DO j = 2, ma
-            afunc(j) = x*afunc(j-1)
-        END DO
-    END SUBROUTINE func
-                  
-        
-    REAL FUNCTION pxpand (order, xv, coeff) RESULT (polyval)
-        IMPLICIT NONE
-        INTEGER,INTENT(IN)           :: order
-        REAL,DIMENSION(1),INTENT(IN) :: coeff   ! was dim(order)
-        REAL,INTENT(IN)              :: xv
-        INTEGER                      :: j
-        polyval = 0.
-        DO j = order, 2, -1
-            polyval = xv*(polyval + coeff(j))
-        END DO
-        polyval = polyval + coeff(1)
-    END FUNCTION pxpand
-
