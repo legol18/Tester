@@ -9,7 +9,7 @@
     CONTAINS
 
       SUBROUTINE DERIVS(NEQ,T,Y,YDOT)
-        IMPLICIT NONE          
+        IMPLICIT NONE
         INTEGER, intent(in):: NEQ
         real(kind=4), intent(in):: T, Y(NEQ) 
         real(kind=4), intent(out):: YDOT(NEQ)
@@ -42,8 +42,8 @@
               enddo 
         !*************************
         do iti=1,imn
-                  
-           cptsum=0.0                                                   !!          
+        
+           cptsum=0.0                                                   !!
            do itj=1,imn                                                 !! competition summation
             cptsum=cptsum+acpt(iti,itj)*Y(itj)                          !!
            enddo                                                        !!   
@@ -58,7 +58,7 @@
             endif 
            !if(itj/=icptch) write(*,24) dfloat(iti),dfloat(icptch),dfloat(iflag+(itj-1)*in),ad(iti); pause
            enddo
-            YDOT(iti)=ar(iti)*Y(iti)*(1.0-(Y(iti)+cptsum)/akc(iti))+(-ad(iti)*Y(iti)+1.d0*cdsum/float(im-1))
+            YDOT(iti)=ar(iti)*Y(iti)*(1.0-(Y(iti)+cptsum)/akc(iti))+(-ad(iti)*Y(iti)+cdsum/float(im-1))
             
        enddo
        24  Format(30F15.7)
@@ -74,7 +74,6 @@
       USE random
 !     Type declarations:
       IMPLICIT NONE
-!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
       real(kind=4):: h,T,TOUT, xrho1, xrho2, xvar1, xvar2, kppa
       real(kind=4):: ald,aldi,gmd,gmdi,btd, reg_avg
       real(kind=4):: alcv,gmcv,btcv
@@ -89,22 +88,16 @@
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!! variables for the random number generator
     INTEGER, ALLOCATABLE  :: ix(:), seed(:) 
 
-    REAL, ALLOCATABLE     :: xep(:), xptch(:), xnew(:), xmeanep(:), xmeanptch(:), xmeannew(:), &
-                             covep(:), covptch(:), covnew(:), chol_fep(:), chol_fptch(:), chol_fnew(:), &
-                             xseed(:)
+    REAL, ALLOCATABLE     :: xep(:), xptch(:), xmeanep(:), xmeanptch(:), covep(:), covptch(:), chol_fep(:), &
+                            chol_fptch(:), xseed(:)
 
-    INTEGER               :: nep, nptch, nnew, ndf, n_binom, k, kep, kptch, knew, ier, pos1, pos2, which, iindx  
+    INTEGER               :: nep, nptch, ndf, n_binom, k, kep, kptch, ier, pos1, pos2, which, iindx
 
     REAL                  :: average, stdvn, shape, a, b, mu, p, pop_mean, pop_sd,   &
                             one = 1.0, zero = 0.0, sk, two = 2.0, pcntile(9), &
                             middle, xmax, xmin, xtseed
     LOGICAL               :: first
 
-!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-   real(kind=8) aR,bR,slopeaa,slopeab,slopebb,slopegg    !!!!!!!!!!!!!!!!!!!!! FOR REGRESSION
-   REAL, DIMENSION(ninic)  :: xR !     = (/ 1.0, 2.0, 3.0, 4.0, 5.0 /)
-   REAL, DIMENSION(ninic)  :: yR !     = (/ 1.0, 16.0, 80.9, 256.5, 625.0 /)
-   real, dimension(ninic) :: aldR, btdR, gmdR, alcvR, btcvR, gmcvR
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
    allocate(Y(NEQ),YDER(NEQ),ctmp(imn,imn),noi_spec(imn),noi_ptch(imn)); par=0.0
@@ -129,7 +122,7 @@ xrho1=0.0  !!print*, "Between species correlation";
 read*,xrho2; print*, xrho2, "started" !! between patch correlation
 xvar1=0.04  !! species specific variance
 xvar2=0.04  !! patch specific variance
-kppa=3.0    !! kappa
+kppa=8.0    !! kappa
 
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!! allocation for the random number for species specific environmental response
     kep=in                    !! species/patch 
@@ -160,23 +153,8 @@ kppa=3.0    !! kappa
         pos2 = pos2 + i
         covptch(pos1:pos2)=xrho2*xvar2; covptch(pos2)=xvar2
     END DO
-!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!! allocation for the random number for combined noise response
-!!! knew,nnew,allocate:: xnew,xmeannew,covnew,chol_fnew
-    knew=im*in
-    nnew = knew*(knew+1)/2
-    ALLOCATE ( xnew(knew), xmeannew(knew), covnew(nnew), chol_fnew(nnew) )
-!!!!!! MEAN VECTOR FOR PATCHES
-    xmeannew=0.0
-! ! 
-!!!!!! COVARIANCE MATRIX FOR COMBINED RESPONSE
-    pos2 = 0
-    DO i = 1, knew
-        pos1 = pos2 + 1
-        pos2 = pos2 + i
-        covnew(pos1:pos2)=xrho1*xrho2*xvar2; covnew(pos2)=xvar2
-    END DO
     
-!!!!!!!!!!!!!!!!! NETWORK STUFF
+    !!!!!!!!!!!!!!!!! NETWORK STUFF
 
        do i=1,im
          beta(i)=0.5d0!0.3d0+0.4d0*dfloat(i)/dfloat(NEQ)  ! AREA PROXIES for Waxman
@@ -288,12 +266,6 @@ kppa=3.0    !! kappa
         WRITE(*, *) '** Covariance matrix2 is not +ve definite **'
         PAUSE; !EXIT replaced since the do loop was removed
         END IF
-!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!! between patch random number
-!         CALL random_mvnorm(knew, xmeannew, covnew, chol_fnew, first, xnew, ier)
-!         IF (ier .NE. 0) THEN
-!         WRITE(*, *) '** Covariance matrix2 is not +ve definite **'
-!         PAUSE; !EXIT replaced since the do loop was removed
-!         END IF
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
         do i=1,im
            noi_spec((i-1)*in+1:i*in)=xep
@@ -308,8 +280,8 @@ kppa=3.0    !! kappa
         enddo
          call DERIVS(NEQ,T,Y,YDER)
          do i=1,imn
-           Y(i)=Y(i)+h*YDER(i)+sqrt(h)*Y(i)*(noi_spec(i)+noi_ptch(i))! &
-          ! & +kppa*xnew(i)) !!  noise added; T=T+h
+           Y(i)=Y(i)+h*YDER(i)+sqrt(h)*Y(i)*(noi_spec(i)+noi_ptch(i) &
+           & +kppa*noi_ptch(i)*noi_spec(i)) !!  noise added; T=T+h
          enddo
         kcout=0
         do l=1,im
@@ -344,7 +316,7 @@ kppa=3.0    !! kappa
 !!!!!!!!!!!!!!!!!!!!!!!! ENS based
    do l=1,im
      sum_patch_l=sum(ysave(l,:,niter))
-    do i=1,in          
+    do i=1,in
      yprel(l,i)=ysave(l,i,niter)/sum_patch_l
     enddo
    enddo
@@ -357,7 +329,7 @@ kppa=3.0    !! kappa
     enddo
 
     ald=1.0/aldi                              !! alpha_d
-    !ald, btd, gmd, alcv, btcv, gmcv
+    
     do i=1,in
      xp_i(i)=sum(ysave(:,i,niter))/sum(ysave(:,:,niter))
     enddo
@@ -398,31 +370,8 @@ kppa=3.0    !! kappa
 ! !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
         write(11,24) ald, btd, gmd, alcv, btcv, gmcv 
         write(*,24) ald, btd, gmd, alcv, btcv, gmcv
-        aldR(inic)=ald; btdR(inic)=btd; gmdR(inic)=gmd; alcvR(inic)=alcv; btcvR(inic)=btcv; gmcvR(inic)=gmcv
-   enddo !!!! INIC
-   
-   !!!!! Regression start
-   aR=0.d0; bR=0.d0
-  xR=aldR; yR=alcvR
-  call llsq ( ninic, xR, yR, aR, bR ) !! fit alcv and ald
-  slopeaa=aR
-  print*,aR,bR
-  yR=btcvR
-  call llsq ( ninic, xR, yR, aR, bR ) !! fit btdcv and ald
-  slopeab=aR
-  print*,aR,bR
-  xR=btdR; yR=btcvR
-   call llsq ( ninic, xR, yR, aR, bR ) !! fit btdcv and btd
-  slopebb=aR
-  print*,aR,bR
-  xR=gmdR; yR=gmcvR
-   call llsq ( ninic, xR, yR, aR, bR ) !! fit gmcvcv and gmdd
-  slopegg=aR
-  print*,aR,bR
-  !!!!! Regression end
-  write(21,24) xrho2,slopeaa,slopeab,slopebb,slopegg
+   enddo !!!! INIC     
 !! OUTPUT FILE FORMAT
-    
       24  Format(20F20.7)
 
 END PROGRAM DEMOWANG
