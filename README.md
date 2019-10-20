@@ -20,9 +20,13 @@ Steps to simulation:
 You can play around with all the codes and procedures as you like. 
 
 To generate the diversity vs variability plot from the paper, you need the following routines in the same folder, namely:
-latest.f90
-random.f90
-plotting.gpl
-execute.sh (Primary execution file. Please enable appropriate permissions using chmod before executing)
+
+(a) latest.f90, 
+
+(b) random.f90, 
+
+(c) plotting.gpl (gnuplot file, needs gnuplot installed to work), 
+
+(d) exec.sh (Primary execution file. Please enable appropriate permissions using chmod before executing).
 
 Please report issues, Thanks.
