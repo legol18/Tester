@@ -1,0 +1,83 @@
+set term postscript eps enhanced color
+set out 'Figure_w.eps'
+#set label 'First implementation'
+set multiplot layout 2,2 rowsfirst
+unset key
+set style line 1 lt rgb "red" lw 4
+set style line 2 lt rgb "green" lw 4
+set style line 3 lt rgb "black" lw 4
+########### plot 1
+
+set xlabel '{/Symbol a}_D'
+set ylabel '{/Symbol a}_{CV}'
+#set xr[2:4]
+#set yr[0.015:0.07]
+set xtics 1
+set ytics 0.02
+
+f11(x)=a11*x+b11
+f12(x)=a12*x+b12
+f13(x)=a13*x+b13
+
+fit f11(x) 'mpzero6_w.dat' u 1:4 via a11,b11
+fit f12(x) 'p8_w.dat' u 1:4 via a12,b12
+fit f13(x) 'zero_w.dat' u 1:4 via a13,b13
+
+plot 'mpzero6_w.dat' u 1:4 w d ls 3, f11(x) ls 3, 'p8_w.dat' u 1:4 w d ls 2, f12(x) ls 2, 'zero_w.dat' u 1:4 w d ls 1, f13(x) ls 1
+
+########### plot 2
+set xlabel '{/Symbol a}_D'
+set ylabel '{/Symbol b}_{CV}'
+#set xtics 1
+set ytics 2
+#set yrange [0 to 6]
+#set xr[1.5:5.5]
+
+f21(x)=a21*x+b21
+f22(x)=a22*x+b22
+f23(x)=a23*x+b23
+
+fit f21(x) 'mpzero6_w.dat' u 1:5 via a21,b21
+fit f22(x) 'p8_w.dat' u 1:5 via a22,b22
+fit f23(x) 'zero_w.dat' u 1:5 via a23,b23
+
+plot 'mpzero6_w.dat' u 1:5 w d ls 3, f21(x) ls 3, 'p8_w.dat' u 1:5 w d ls 2, f22(x) ls 2, 'zero_w.dat' u 1:5 w d ls 1, f23(x) ls 1
+
+########### plot 3
+set xlabel '{/Symbol b}_D'
+set ylabel '{/Symbol b}_{CV}'
+set xtics 1
+#set ytics 2
+set xr[0.5 to 2.5]
+#set yr[0 to 6]
+
+f31(x)=a31*x+b31
+f32(x)=a32*x+b32
+f33(x)=a33*x+b33
+
+fit f31(x) 'mpzero6_w.dat' u 2:5 via a31,b31
+fit f32(x) 'p8_w.dat' u 2:5 via a32,b32
+fit f33(x) 'zero_w.dat' u 2:5 via a33,b33
+
+plot 'mpzero6_w.dat' u 2:5 w d ls 3, f31(x) ls 3, 'p8_w.dat' u 2:5 w d ls 2, f32(x) ls 2, 'zero_w.dat' u 2:5 w d ls 1, f33(x) ls 1
+
+########### plot 4
+
+set xlabel '{/Symbol g}_D'
+set ylabel '{/Symbol g}_{CV}'
+set xtics 2
+set ytics 0.02
+set xrange[2 to 8]
+#set yrange[-0.002 to 0.04]
+
+f41(x)=a41*x+b41
+f42(x)=a42*x+b42
+f43(x)=a43*x+b43
+
+fit f41(x) 'mpzero6_w.dat' u 3:6 via a41,b41
+fit f42(x) 'p8_w.dat' u 3:6 via a42,b42
+fit f43(x) 'zero_w.dat' u 3:6 via a43,b43
+
+plot 'mpzero6_w.dat' u 3:6 w d ls 3, f41(x) ls 3, 'p8_w.dat' u 3:6 w d ls 2, f42(x) ls 2, 'zero_w.dat' u 3:6 w d ls 1, f43(x) ls 1
+
+unset multiplot
