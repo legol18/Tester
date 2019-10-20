@@ -29,4 +29,4 @@ To generate the diversity vs variability plot from the paper, you need the follo
 
 (d) exec.sh (Primary execution file. Please enable appropriate permissions using chmod before executing).
 
-Please report issues, Thanks.
+The routines have been checked to work for Intel Fortran as well as gfortran compilers. Please report in case of any issues, Thanks.
