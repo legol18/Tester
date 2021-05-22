@@ -2,7 +2,7 @@
    implicit none
    integer, parameter:: in=10,im=2,igen=5           !! 'in' is the number of species in each patch, 'im' is the number of patches in the metacommunity
    integer, parameter:: imn=im*in, npar=imn*(imn+3)+im**2,ifact=1  !! npar is the number of parameters, ifact gives number of community pairs
-   INTEGER, PARAMETER :: mlyap=0,NEQ=(mlyap+1)*imn,niter=50000,ntrans=10000,ninic=2000,net_Tscl=niter+10  !! ntrans is transient time, niter is iteration beyond transients
+   INTEGER, PARAMETER :: mlyap=0,NEQ=(mlyap+1)*imn,niter=30000,ntrans=20000,ninic=2000,net_Tscl=1000000  !! ntrans is transient time, niter is iteration beyond transients
    real(kind=4), parameter:: d_max=14000.d0, a_max=1000.d0, xL=1.d0
    real(kind=4):: par(npar)
 
@@ -34,12 +34,13 @@
               do i=1,imn                                       !!
                 kc=kc+1; ad(i)=par(kc)                         !!
               enddo                                            !! dispersal terms
-!           write(*,24),ad; pause
+           !write(*,24),ad; pause
               do i=1,im
                do j=1,im
-                kc=kc+1; xadj(i,j)=par(kc)
+               kc=kc+1; xadj(i,j)=par(kc)
                enddo
               enddo 
+            !  print*,xadj
         !*************************
         do iti=1,imn
         
@@ -52,13 +53,20 @@
            icptch=int(float(iti-1)/float(in))+1                                                 !!
            iflag=mod(iti,in); if(iflag==0) iflag=in                                             !!
            kc=0
-           do itj=1,im                                                                          !! dispersal
+           do itj=1,im                               !! dispersal
             if(itj/=icptch) then
-              kc=kc+1; cdsum=cdsum+ad(iti)*xadj(icptch,itj)*Y(iflag+(itj-1)*in)                 !!
-            endif 
+              cdsum=cdsum+xadj(itj,icptch)*Y(iflag+(itj-1)*in)                 !!
+            endif
            !if(itj/=icptch) write(*,24) dfloat(iti),dfloat(icptch),dfloat(iflag+(itj-1)*in),ad(iti); pause
            enddo
-            YDOT(iti)=ar(iti)*Y(iti)*(1.0-(Y(iti)+cptsum)/akc(iti))+(-ad(iti)*Y(iti)+cdsum/float(im-1))
+           
+           if (sum(xadj(:,icptch))>0.00001d0) then 
+             cdsum=cdsum/sum(xadj(:,icptch))
+            else
+             cdsum=0.d0
+            endif
+            
+            YDOT(iti)=ar(iti)*Y(iti)*(1.0-(Y(iti)+cptsum)/akc(iti))+ad(iti)*(cdsum-Y(iti))
             
        enddo
        24  Format(30F15.7)
@@ -166,19 +174,20 @@ kppa=8.0    !! kappa
         call random_number(dist_mat(j,i)); dist_mat(i,j)=dist_mat(j,i)  !! dist_mat is the distance matrix for the KHs
         enddo
       enddo   
-      adjm=0.d0; kij=0; write(1,*)'digraph{'
+      adjm=0.d0; kij=0; write(1,*) 'digraph {'
         do i=1,im                                      ! 
           do j=1,im
             kij=kij+1                                          !
-            !p_waxmn=(beta(i)*beta(j))*exp(-dist_mat(i,j)/xL)!(beta(i)*beta(j))*dexp(-dist_mat(i,j)/xL)  !
-            !call random_number(p_mc)                         ! Adjacency matrix
+            p_waxmn=(beta(i)*beta(j))*exp(-dist_mat(i,j)/xL)!(beta(i)*beta(j))*dexp(-dist_mat(i,j)/xL)  !
+            call random_number(p_mc)                         ! Adjacency matrix
             !if(p_mc<p_waxmn) adjm(i,j)=1.d0
             adjm(i,j)=1.d0
             if(i==j) adjm(i,j)=0.d0                           !
             if(adjm(i,j)==1) write(1,*) i,'->',j!
           enddo                                              ! 
          enddo
-         write(1,*)'}'
+         write(1,*) '}'
+         
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!! RANDOM NUMBER GEN. PREPARATION DONE
       do inic=1,ninic!; print*,inic
       par=0.0
@@ -233,8 +242,8 @@ kppa=8.0    !! kappa
             kij=kij+1                                                             !
             p_waxmn=(beta(i)*beta(j))*exp(-dist_mat(i,j)/xL)                   !
             call random_number(p_mc)                         ! Adjacency matrix
-            if(p_mc<p_waxmn) adjm(i,j)=1.d0                   !
-            !adjm(i,j)=1.d0
+            !if(p_mc<p_waxmn) adjm(i,j)=1.d0                   !
+            adjm(i,j)=1.d0
             if(i==j) adjm(i,j)=0.d0                           !
           enddo                                              ! 
          enddo
@@ -298,8 +307,8 @@ kppa=8.0    !! kappa
             kij=kij+1                                                             !
             p_waxmn=(beta(i)*beta(j))*exp(-dist_mat(i,j)/xL)                   !
             call random_number(p_mc)                         ! Adjacency matrix
-            if(p_mc<p_waxmn) adjm(i,j)=1.d0                   !
-            !adjm(i,j)=1.d0
+            !if(p_mc<p_waxmn) adjm(i,j)=1.d0                   !
+            adjm(i,j)=1.d0
             if(i==j) adjm(i,j)=0.d0                           !
           enddo                                              ! 
          enddo
